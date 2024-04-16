@@ -1,44 +1,189 @@
-package aa; // Consider using a more descriptive package name like tictactoe
-
+package v;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
-public class HW6 {
-	public static void main(String[] args) {
-	    TicTacToe game = new TicTacToe();
-	    game.playGame();
-	}
+class TicTacToeGame {
+    private char[][] board;
+    private char currentPlayer;
+
+    public TicTacToeGame() {
+        board = new char[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                board[i][j] = ' ';
+            }
+        }
+        currentPlayer = 'X'; // X starts the game
+    }
+
+    public char getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public boolean makeMove(int row, int col) {
+        if (isValidMove(row, col)) {
+            board[row][col] = currentPlayer;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isValidMove(int row, int col) {
+        return row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] == ' ';
+    }
+
+    public boolean hasWinner() {
+        return checkWinner(currentPlayer);
+    }
+
+    private boolean checkWinner(char currentPlayer) {
+        for (int i = 0; i < 3; i++) {
+            if (board[i][0] == currentPlayer && board[i][1] == currentPlayer && board[i][2] == currentPlayer) return true;
+            if (board[0][i] == currentPlayer && board[1][i] == currentPlayer && board[2][i] == currentPlayer) return true;
+        }
+        if (board[0][0] == currentPlayer && board[1][1] == currentPlayer && board[2][2] == currentPlayer) return true;
+        if (board[0][2] == currentPlayer && board[1][1] == currentPlayer && board[2][0] == currentPlayer) return true;
+        return false;
+    }
+
+    public boolean isBoardFull() {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board[i][j] == ' ') return false;
+            }
+        }
+        return true;
+    }
+
+    public void switchPlayer() {
+        currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    }
+    
+    public char[][] getGameBoard() {
+        return board;
+    }
+
 }
 
 
-class TicTacToe {
-
-    private static final char PLAYER_X = 'X';
-    private static final char PLAYER_O = 'O';
-
-    public static void playGame() {
-        char[][] board = {{' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}};
+public class HW6 {
+    public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        char currentPlayer = PLAYER_X;
-        boolean gameEnded = false;
 
-        while (!gameEnded) {
-            drawBoard(board);
-            boolean validMove = getMove(board, currentPlayer, scanner);
-            if (!validMove) {
-                continue; // Skip to the next iteration if the move was invalid
-            }
-            gameEnded = checkWinner(board, currentPlayer);
-            if (!gameEnded) {
-                currentPlayer = currentPlayer == PLAYER_X ? PLAYER_O : PLAYER_X;
-            }
+        System.out.println("Welcome to Tic Tac Toe!");
+        System.out.println("Choose the game mode:");
+        System.out.println("1. Player vs Player");
+        System.out.println("2. Player vs Bot");
+        System.out.print("Enter your choice: ");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline character
+
+        TicTacToeGame game = new TicTacToeGame();
+
+        if (choice == 1) {
+            playPlayerVsPlayer(game, scanner);
+        } else if (choice == 2) {
+            playPlayerVsBot(game, scanner);
+        } else {
+            System.out.println("Invalid choice. Exiting...");
         }
 
-        drawBoard(board);
-        System.out.println("Player " + currentPlayer + " wins!");
         scanner.close();
     }
 
-    private static void drawBoard(char[][] board) {
+    private static void playPlayerVsPlayer(TicTacToeGame game, Scanner scanner) {
+        boolean gameEnded = false;
+
+        while (!gameEnded) {
+            printBoard(game.getGameBoard());
+            boolean validInput = false;
+
+            while (!validInput) {
+                System.out.println("Player " + game.getCurrentPlayer() + ", enter your move (row [0-2] and column [0-2]): ");
+                try {
+                    int row = scanner.nextInt();
+                    int col = scanner.nextInt();
+                    if (game.makeMove(row, col)) {
+                        validInput = true;
+                    } else {
+                        System.out.println("This move at (" + row + "," + col + ") is not valid. Try again.");
+                    }
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input. Please enter numbers only.");
+                    scanner.nextLine();
+                }
+            }
+
+            if (game.hasWinner()) {
+                gameEnded = true;
+                printBoard(game.getGameBoard());
+                System.out.println("Player " + game.getCurrentPlayer() + " wins!");
+            } else if (game.isBoardFull()) {
+                printBoard(game.getGameBoard());
+                System.out.println("It's a tie!");
+                break;
+            } else {
+                game.switchPlayer();
+            }
+        }
+    }
+
+    private static void playPlayerVsBot(TicTacToeGame game, Scanner scanner) {
+        boolean gameEnded = false;
+
+        while (!gameEnded) {
+            printBoard(game.getGameBoard());
+            boolean validInput = false;
+
+            while (!validInput) {
+                if (game.getCurrentPlayer() == 'X') {
+                    System.out.println("Player X, enter your move (row [0-2] and column [0-2]): ");
+                    try {
+                        int row = scanner.nextInt();
+                        int col = scanner.nextInt();
+                        if (game.makeMove(row, col)) {
+                            validInput = true;
+                        } else {
+                            System.out.println("This move at (" + row + "," + col + ") is not valid. Try again.");
+                        }
+                    } catch (InputMismatchException e) {
+                        System.out.println("Invalid input. Please enter numbers only.");
+                        scanner.nextLine();
+                    }
+                } else {
+                    // Bot's turn
+                    // Implement bot move logic here
+                    // For simplicity, let's just randomly choose a move
+                    int row = (int) (Math.random() * 3);
+                    int col = (int) (Math.random() * 3);
+                    if (game.makeMove(row, col)) {
+                        validInput = true;
+                        System.out.println("Bot chose position (" + row + "," + col + ").");
+                    }
+                }
+            }
+
+            if (game.hasWinner()) {
+                gameEnded = true;
+                printBoard(game.getGameBoard());
+                if (game.getCurrentPlayer() == 'X') {
+                    System.out.println("Player X wins!");
+                } else {
+                    System.out.println("Bot wins!");
+                }
+            } else if (game.isBoardFull()) {
+                printBoard(game.getGameBoard());
+                System.out.println("It's a tie!");
+                break;
+            } else {
+                game.switchPlayer();
+            }
+        }
+    }
+
+    private static void printBoard(char[][] board) {
         System.out.println("Board:");
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -48,61 +193,5 @@ class TicTacToe {
             System.out.println();
             if (i < 2) System.out.println("-+-+-");
         }
-    }
-
-    private static boolean getMove(char[][] board, char currentPlayer, Scanner scanner) {
-        System.out.println("Player " + currentPlayer + ", enter your move (row and column):");
-        String inputString = scanner.nextLine();
-
-        try {
-            String[] parts = inputString.split("\\s+");
-            if (parts.length != 2) {
-                throw new NumberFormatException();
-            }
-
-            int row = Integer.parseInt(parts[0].trim());
-            int col = Integer.parseInt(parts[1].trim());
-
-            if (row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] == ' ') {
-                board[row][col] = currentPlayer;
-                return true;
-            } else {
-                System.out.println("This move at (" + row + "," + col + ") is not valid. Try again.");
-                return false;
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input. Please enter numbers only.");
-            return false;
-        }
-    }
-
-    private static boolean checkWinner(char[][] board, char currentPlayer) {
-        for (int i = 0; i < 3; i++) {
-            if (board[i][0] == currentPlayer && board[i][1] == currentPlayer && board[i][2] == currentPlayer) {
-                return true;
-            }
-            if (board[0][i] == currentPlayer && board[1][i] == currentPlayer && board[2][i] == currentPlayer) {
-                return true;
-            }
-        }
-        if (board[0][0] == currentPlayer && board[1][1] == currentPlayer && board[2][2] == currentPlayer) {
-            return true;
-        }
-        if (board[0][2] == currentPlayer && board[1][1] == currentPlayer && board[2][0] == currentPlayer) {
-            return true;
-        }
-
-        // Check for tie after all possible winning conditions are checked
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (board[i][j] == ' ') {
-                    return false;
-                }
-            }
-        }
-
-        System.out.println("It's a tie!");
-        System.exit(0);
-        return false;
     }
 }
